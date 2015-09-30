@@ -1,0 +1,5 @@
+Extracting updates:
+
+tar -xzpf Documents_1015-09-25-20-00-00_full.tar.gz
+tar -xzpf --incremental Documents_1015-09-25-20-05-00_incremental.tar.gz
+
