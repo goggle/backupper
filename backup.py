@@ -4,6 +4,8 @@ import os
 import datetime
 import re
 import shutil
+# import configparser
+import config
 
 # The directories we want to backup:
 DIRECTORIES = ['/home/alex/Documents', '/home/alex/Pictures', '/home/alex/Music', '/home/alex/Calibre']
@@ -14,11 +16,20 @@ BACKUP_DIRECTORY = '/mnt/harddrive/backup'
 
 class Backup:
     def __init__(self, backupType):
+        configurations = config.Config()
+        self.backupDirectory = configurations.getBackupDirectory()
+        self.backupEntries = configurations.getBackupEntries()
         self.backupType = backupType
-        self.time = datetime.datetime.now()
-        self.names = []
-        for directory in DIRECTORIES:
-            self.names.append(os.path.split(directory)[-1])
+        # self.time = datetime.datetime.now()
+        # self.names = []
+        # for directory in DIRECTORIES:
+        #     self.names.append(os.path.split(directory)[-1])
+        self.fullBackupFilenameExtension = 'full'
+        self.incrementalBackupFilenameExtension = 'incremental'
+
+    def fullBackupAvailable(self):
+        pass
+
 
     def performBackup(self):
         if self.backupType == 'full':
@@ -94,19 +105,22 @@ class Backup:
         return time.strftime("%Y-%m-%d-%H-%M-%S")
 
 
+class NoFullBackupException(Exception):
+    pass
 
-if __name__ == '__main__':
-    if len(sys.argv) <= 1:
-        print("Specify the type of the backup: Use either 'full' for a full backup or 'incremental' for a incremental backup.")
-        sys.exit(0)
-    backupType = ''
-    if sys.argv[1] == 'full':
-        backupType = 'full'
-    elif sys.argv[1] == 'incremental':
-        backupType = 'incremental'
-    else:
-        print("No valid backup type specified. Use either 'full' for a full backup or 'incremental' for a incremental backup.")
-        sys.exit(0)
 
-    backup = Backup(backupType)
-    backup.performBackup()
+# if __name__ == '__main__':
+#     if len(sys.argv) <= 1:
+#         print("Specify the type of the backup: Use either 'full' for a full backup or 'incremental' for a incremental backup.")
+#         sys.exit(0)
+#     backupType = ''
+#     if sys.argv[1] == 'full':
+#         backupType = 'full'
+#     elif sys.argv[1] == 'incremental':
+#         backupType = 'incremental'
+#     else:
+#         print("No valid backup type specified. Use either 'full' for a full backup or 'incremental' for a incremental backup.")
+#         sys.exit(0)
+#
+#     backup = Backup(backupType)
+#     backup.performBackup()

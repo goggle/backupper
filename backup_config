@@ -1,0 +1,11 @@
+[Default]
+BackupDirectory = /home/alex/backup
+RecoveryDirectory = /home/alex/backup
+
+[Documents]
+Directory = /home/alex/Documents
+Compression = xz
+
+[Development]
+Directory = /home/alex/development
+Compression = gz
