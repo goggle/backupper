@@ -6,26 +6,35 @@ import re
 import shutil
 # import configparser
 import config
+import logging
+import shlex
+import subprocess
 
 # The directories we want to backup:
-DIRECTORIES = ['/home/alex/Documents', '/home/alex/Pictures', '/home/alex/Music', '/home/alex/Calibre']
+# DIRECTORIES = ['/home/alex/Documents', '/home/alex/Pictures', '/home/alex/Music', '/home/alex/Calibre']
 
 # The directory, where we want to store the backups:
-BACKUP_DIRECTORY = '/mnt/harddrive/backup'
+# BACKUP_DIRECTORY = '/mnt/harddrive/backup'
 
 
 class Backup:
-    def __init__(self, backupType):
+    # def __init__(self, backupType):
+    def __init__(self):
         configurations = config.Config()
         self.backupDirectory = configurations.getBackupDirectory()
         self.backupEntries = configurations.getBackupEntries()
-        self.backupType = backupType
+        self.logFile = configurations.getLogFile()
+        # self.backupType = backupType
         # self.time = datetime.datetime.now()
         # self.names = []
         # for directory in DIRECTORIES:
         #     self.names.append(os.path.split(directory)[-1])
         self.fullBackupFilenameExtension = 'full'
         self.incrementalBackupFilenameExtension = 'incremental'
+        self.dateTimeRegexString = '\d\d\d\d-\d\d-\d\d-\d\d-\d\d-\d\d'
+
+        # Initialize the logger:
+        logging.basicConfig(filename=self.logFile, level=logging.INFO, format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S')
 
 
     def fullBackupAvailable(self):
@@ -47,6 +56,206 @@ class Backup:
             if not found:
                 return False
         return True
+
+
+    def performFullBackupOfEntry(self, backupEntry):
+        """
+        Performs a full backup of a given backup entry.
+        """
+        time = datetime.datetime.now()
+        timeString = self.datetimeToString(time)
+
+        name = backupEntry.getName()
+        compression = backupEntry.getCompressionType()
+        fileExtension = backupEntry.getFilenameExtension()
+        directory = backupEntry.getDirectory()
+        directoryName = directory.strip('/')
+        if directoryName.find('/') == -1:
+            directoryName = '/'
+        else:
+            while True:
+                ind = directoryName.find('/')
+                if ind == -1:
+                    break
+                directoryName = directoryName[ind + 1 :]
+
+        snarFilename = name + '_' + timeString + '.snar'
+        tarFilename = name + '_' + timeString + '_' + self.fullBackupFilenameExtension + fileExtension
+
+        snarFullFilename = os.path.join(self.backupDirectory, snarFilename)
+        tarFullFilename = os.path.join(self.backupDirectory, tarFilename)
+
+        tarDict = {
+            'tar': '',
+            'gz': 'z',
+            'bz2': 'j',
+            'xz': 'J'
+        }
+
+        command = 'tar'
+        commandOptions = ' --listed-increment ' + snarFullFilename + ' -c' + tarDict[compression] + 'pf ' + tarFullFilename + ' ' + directoryName
+        commandString = command + commandOptions
+
+        logging.info('Starting full backup of ' + directory + '.')
+
+        try:
+            currentDir = os.getcwd()
+            os.chdir(directory)
+            os.chdir('..')
+            process = subprocess.Popen(shlex.split(commandString), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            stdout, stderr = process.communicate()
+            if stderr:
+                logging.error('Executing tar resulted in an error.')
+                logging.error(stderr)
+            os.chdir(currentDir)
+            logging.info('Successfully created full backup of ' + directory + ' and stored in ' + tarFullFilename + \
+                '. The corresponding snapshot was stored in ' + snarFullFilename + '.')
+
+        except OSError as exception:
+            logging.error('Exception occured: ' + str(exception))
+            os.chdir(currentDir)
+        except Exception as exception:
+            logging.error('An unknown exception occured: ' + str(exception))
+            os.chdir(currentDir)
+
+
+    def performFullBackup(self):
+        for entry in self.backupEntries:
+            self.performFullBackupOfEntry(entry)
+
+
+    def performIncrementalBackupOfEntry(self, backupEntry):
+        """Performs an incremental backup of a given backup entry."""
+        time = datetime.datetime.now()
+        timeString = self.datetimeToString(time)
+
+        name = backupEntry.getName()
+        compression = backupEntry.getCompressionType()
+        fileExtension = backupEntry.getFilenameExtension()
+        directory = backupEntry.getDirectory()
+        directoryName = directory.strip('/')
+        if directoryName.find('/') == -1:
+            directoryName = '/'
+        else:
+            while True:
+                ind = directoryName.find('/')
+                if ind == -1:
+                    break
+                directoryName = directoryName[ind + 1 :]
+
+        # snarFilename = name + '_' + timeString + '.snar'
+        tarFilename = name + '_' + timeString + '_' + self.incrementalBackupFilenameExtension + fileExtension
+        # snarFullFilename = os.path.join(self.backupDirectory, snarFilename)
+        tarFullFilename = os.path.join(self.backupDirectory, tarFilename)
+
+        tarDict = {
+            'tar': '',
+            'gz': 'z',
+            'bz2': 'j',
+            'xz': 'J'
+        }
+
+
+        logging.info('Starting incremental backup of ' + directory + '.')
+        try:
+            lastFullBackupTime = self.getTimeOfLastFullBackup(backupEntry)
+        except NoBackupException:
+            logging.error('Could not find a previous full backup of ' + directory + '. Aborting!')
+            return
+        lastFullBackupTimeString = self.datetimeToString(lastFullBackupTime)
+
+        # lastSnarFilename = name + '_' + lastTimeString + '.snar'
+        # lastSnarFullFilename = os.path.join(self.backupDirectory, lastSnarFilename)
+        snarFilename = name + '_' + lastFullBackupTimeString + '.snar'
+        snarFullFilename = os.path.join(self.backupDirectory, snarFilename)
+
+        command = 'tar'
+        commandOptions = ' --listed-increment ' + snarFullFilename + ' -c' + tarDict[compression] + 'pf ' + tarFullFilename + ' ' + directoryName
+        commandString = command + commandOptions
+
+        try:
+            currentDir = os.getcwd()
+            os.chdir(directory)
+            os.chdir('..')
+            process = subprocess.Popen(shlex.split(commandString), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            stdout, stderr = process.communicate()
+            if stderr:
+                logging.error('Executing tar resulted in an error.')
+                logging.error(stderr)
+            os.chdir(currentDir)
+            logging.info('Successfully created incremental backup of ' + directory + ' and stored in ' + tarFullFilename + \
+                '. The corresponding snapshot was stored in ' + snarFullFilename + '.')
+
+        except OSError as exception:
+            logging.error('Exception occured: ' + str(exception))
+            os.chdir(currentDir)
+        except Exception as exception:
+            logging.error('An unknown exception occured: ' + str(exception))
+            os.chdir(currentDir)
+
+
+    def performIncrementalBackup(self):
+        for entry in self.backupEntries:
+            self.performIncrementalBackupOfEntry(entry)
+
+
+
+    def getTimeOfLastBackup(self, backupEntry):
+        """
+        Returns the time of the last performed backup (full or incremental)
+        of a given backup entry.
+        It raises a NoBackupException, if no backup could be found.
+        """
+        fileExtension = backupEntry.getFilenameExtension()
+        name = backupEntry.getName()
+        regexFullString = name + '_' + self.dateTimeRegexString + '_'+ self.fullBackupFilenameExtension + fileExtension
+        regexIncrementalString = name + '_' + self.dateTimeRegexString + '_' + self.incrementalBackupFilenameExtension + fileExtension
+        files = os.listdir(self.backupDirectory)
+        dateTimes = []
+        for f in files:
+            if re.match(regexFullString, f) or re.match(regexIncrementalString, f):
+                match = re.search(self.dateTimeRegexString, f)
+                b = match.span()[0]
+                e = match.span()[1]
+                datetimeString = f[b:e]
+                year = int(datetimeString[0:4])
+                month = int(datetimeString[5:7])
+                day = int(datetimeString[8:10])
+                hour = int(datetimeString[11:13])
+                minute = int(datetimeString[14:16])
+                second = int(datetimeString[17:19])
+                dt = datetime.datetime(year, month, day, hour=hour, minute=minute, second=second)
+                dateTimes.append(dt)
+
+        if not dateTimes:
+            raise NoBackupException
+        return max(dateTimes)
+
+
+    def getTimeOfLastFullBackup(self, backupEntry):
+        fileExtension = backupEntry.getFilenameExtension()
+        name = backupEntry.getName()
+        regexFullString = name + '_' + self.dateTimeRegexString + '_' + self.fullBackupFilenameExtension + fileExtension
+        files = os.listdir(self.backupDirectory)
+        dateTimes = []
+        for f in files:
+            if re.match(regexFullString, f):
+                match = re.search(self.dateTimeRegexString, f)
+                b = match.span()[0]
+                e = match.span()[1]
+                datetimeString = f[b:e]
+                year = int(datetimeString[0:4])
+                month = int(datetimeString[5:7])
+                day = int(datetimeString[8:10])
+                hour = int(datetimeString[11:13])
+                minute = int(datetimeString[14:16])
+                second = int(datetimeString[17:19])
+                dt = datetime.datetime(year, month, day, hour=hour, minute=minute, second=second)
+                dateTimes.append(dt)
+
+        if not dateTimes:
+            raise NoBackupException
+        return max(dateTimes)
 
 
 
@@ -93,6 +302,7 @@ class Backup:
 
     def getTimeOfLastFullUpdate(self, name):
         regex = name + '_\d\d\d\d-\d\d-\d\d-\d\d-\d\d-\d\d_full.tar.gz'
+        # regex = name + '_' + self.dateTimeRegexString + '_' + self.fullBackupFilenameExtension
         files = os.listdir(BACKUP_DIRECTORY)
         fullBackups = []
         for f in files:
@@ -124,9 +334,11 @@ class Backup:
         return time.strftime("%Y-%m-%d-%H-%M-%S")
 
 
-class NoFullBackupException(Exception):
-    pass
+# class NoFullBackupException(Exception):
+#     pass
 
+class NoBackupException(Exception):
+    pass
 
 # if __name__ == '__main__':
 #     if len(sys.argv) <= 1:

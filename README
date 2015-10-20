@@ -10,6 +10,8 @@ Example config file:
 BackupDirectory = /path/to/backup/directory
 # Specify the directory, where the recovery should be extracted:
 RecoveryDirectory = /path/to/recovery/directory
+# Specify the logfile:
+LogFile = /path/to/logfile/logfile
 
 # For each directory to backup, specify a entry section of the form [Name]
 [ExampleName]

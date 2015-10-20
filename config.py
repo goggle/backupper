@@ -32,8 +32,12 @@ class Config:
         if 'RecoveryDirectory' not in self.config['Default']:
             raise NoRecoveryDirectoryException
 
+        if 'LogFile' not in self.config['Default']:
+            raise NoLogFileException
+
         self.backupDirectory = self.config['Default']['BackupDirectory']
         self.recoveryDirectory = self.config['Default']['RecoveryDirectory']
+        self.logFile = self.config['Default']['LogFile']
 
         if not os.path.isdir(self.backupDirectory):
             raise NoBackupDirectoryException
@@ -86,6 +90,9 @@ class Config:
     def getRecoveryDirectory(self):
         return self.recoveryDirectory
 
+    def getLogFile(self):
+        return self.logFile
+
     def getBackupEntries(self):
         return self.entries
 
@@ -131,6 +138,9 @@ class NoBackupDirectoryException(Exception):
     pass
 
 class NoRecoveryDirectoryException(Exception):
+    pass
+
+class NoLogFileException(Exception):
     pass
 
 class InvalidSectionException(Exception):

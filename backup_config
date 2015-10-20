@@ -1,11 +1,12 @@
 [Default]
 BackupDirectory = /home/alex/backup
 RecoveryDirectory = /home/alex/backup
+LogFile = /home/alex/backup/log_backup
 
 [Documents]
 Directory = /home/alex/Documents
-Compression = xz
-
-[Development]
-Directory = /home/alex/development
 Compression = gz
+
+[Startpage]
+Directory = /home/alex/startpage
+Compression = tar
