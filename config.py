@@ -1,6 +1,7 @@
 import configparser
 import os
 
+
 HOME_DIRECTORY = os.path.expanduser('~')
 
 # Specify the possible paths to the config files. The first items in the list
