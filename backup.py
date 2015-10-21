@@ -20,26 +20,6 @@ class Backup:
         self.dateTimeRegexString = organizer.getDateTimeRegexString()
 
 
-    # def fullBackupAvailable(self):
-    #     """
-    #     This method checks, if there is a full backup of all the specified
-    #     backup entries available. It returns 'True', if there is a full backup
-    #     available, and 'False' otherwise.
-    #     """
-    #     files = os.listdir(self.backupDirectory)
-    #     for entry in self.backupEntries:
-    #         found = False
-    #         name = entry.getName()
-    #         fileExtension = entry.getFilenameExtension()
-    #         regexString = name + '_\d\d\d\d-\d\d-\d\d-\d\d-\d\d-\d\d_' + self.fullBackupFilenameExtension + fileExtension
-    #         for f in files:
-    #             if re.match(regexString, f):
-    #                 found = True
-    #                 break
-    #         if not found:
-    #             return False
-    #     return True
-
 
     def performFullBackupOfEntry(self, backupEntry):
         """

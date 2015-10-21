@@ -61,6 +61,62 @@ class Organizer:
         return max(dateTimes)
 
 
+    def getTimeOfLastFullBackupBeforeDate(self, backupEntry, date=datetime.datetime.now()):
+        fileExtension = backupEntry.getFilenameExtension()
+        name = backupEntry.getName()
+        regexFullString = name + '_' + self.dateTimeRegexString + '_' + self.fullBackupFilenameExtension + fileExtension
+        files = os.listdir(self.configurations.getBackupDirectory())
+        dateTimes = []
+        for f in files:
+            if re.match(regexFullString, f):
+                match = re.search(self.dateTimeRegexString, f)
+                b = match.span()[0]
+                e = match.span()[1]
+                datetimeString = f[b:e]
+                year = int(datetimeString[0:4])
+                month = int(datetimeString[5:7])
+                day = int(datetimeString[8:10])
+                hour = int(datetimeString[11:13])
+                minute = int(datetimeString[14:16])
+                second = int(datetimeString[17:19])
+                dt = datetime.datetime(year, month, day, hour=hour, minute=minute, second=second)
+                if dt <= date:
+                    dateTimes.append(dt)
+
+        if not dateTimes:
+            raise NoBackupException
+        return max(dateTimes)
+
+
+    def getIncrementalTimesBetweenDates(self, backupEntry, startDate, endDate=datetime.datetime.now()):
+        """
+
+        """
+        fileExtension = backupEntry.getFilenameExtension()
+        name = backupEntry.getName()
+        regexIncrementalString = name + '_' + self.dateTimeRegexString + '_' + self.incrementalBackupFilenameExtension + fileExtension
+        files = os.listdir(self.configurations.getBackupDirectory())
+        dateTimes = []
+        for f in files:
+            if re.match(regexIncrementalString, f):
+                match = re.search(self.dateTimeRegexString, f)
+                b = match.span()[0]
+                e = match.span()[1]
+                datetimeString = f[b:e]
+                year = int(datetimeString[0:4])
+                month = int(datetimeString[5:7])
+                day = int(datetimeString[8:10])
+                hour = int(datetimeString[11:13])
+                minute = int(datetimeString[14:16])
+                second = int(datetimeString[17:19])
+                dt = datetime.datetime(year, month, day, hour=hour, minute=minute, second=second)
+                if dt >= startDate and dt <= endDate:
+                    dateTimes.append(dt)
+
+        return sorted(dateTimes)
+
+
+
     def getTimeOfLastBackup(self, backupEntry):
         """
         Returns the time of the last performed backup (full or incremental)
