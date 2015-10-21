@@ -1,15 +1,9 @@
 import config
 import logging
+import datetime
+import re
+import os
 
-#
-#
-# fullBackupFilenameExtension = 'full'
-# incrementalBackupFilenameExtension = 'incremental'
-# dateTimeRegexString = '\d\d\d\d-\d\d-\d\d-\d\d-\d\d-\d\d'
-#
-#
-# def datetimeToString(time):
-#     return time.strftime("%Y-%m-%d-%H-%M-%S")
 
 class Organizer:
 
@@ -40,3 +34,64 @@ class Organizer:
 
     def datetimeToString(self, time):
         return time.strftime("%Y-%m-%d-%H-%M-%S")
+
+    def getTimeOfLastFullBackup(self, backupEntry):
+        fileExtension = backupEntry.getFilenameExtension()
+        name = backupEntry.getName()
+        regexFullString = name + '_' + self.dateTimeRegexString + '_' + self.fullBackupFilenameExtension + fileExtension
+        files = os.listdir(self.configurations.getBackupDirectory())
+        dateTimes = []
+        for f in files:
+            if re.match(regexFullString, f):
+                match = re.search(self.dateTimeRegexString, f)
+                b = match.span()[0]
+                e = match.span()[1]
+                datetimeString = f[b:e]
+                year = int(datetimeString[0:4])
+                month = int(datetimeString[5:7])
+                day = int(datetimeString[8:10])
+                hour = int(datetimeString[11:13])
+                minute = int(datetimeString[14:16])
+                second = int(datetimeString[17:19])
+                dt = datetime.datetime(year, month, day, hour=hour, minute=minute, second=second)
+                dateTimes.append(dt)
+
+        if not dateTimes:
+            raise NoBackupException
+        return max(dateTimes)
+
+
+    def getTimeOfLastBackup(self, backupEntry):
+        """
+        Returns the time of the last performed backup (full or incremental)
+        of a given backup entry.
+        It raises a NoBackupException, if no backup could be found.
+        """
+        fileExtension = backupEntry.getFilenameExtension()
+        name = backupEntry.getName()
+        regexFullString = name + '_' + self.dateTimeRegexString + '_'+ self.fullBackupFilenameExtension + fileExtension
+        regexIncrementalString = name + '_' + self.dateTimeRegexString + '_' + self.incrementalBackupFilenameExtension + fileExtension
+        files = os.listdir(self.configurations.getBackupDirectory())
+        dateTimes = []
+        for f in files:
+            if re.match(regexFullString, f) or re.match(regexIncrementalString, f):
+                match = re.search(self.dateTimeRegexString, f)
+                b = match.span()[0]
+                e = match.span()[1]
+                datetimeString = f[b:e]
+                year = int(datetimeString[0:4])
+                month = int(datetimeString[5:7])
+                day = int(datetimeString[8:10])
+                hour = int(datetimeString[11:13])
+                minute = int(datetimeString[14:16])
+                second = int(datetimeString[17:19])
+                dt = datetime.datetime(year, month, day, hour=hour, minute=minute, second=second)
+                dateTimes.append(dt)
+
+            if not dateTimes:
+                raise NoBackupException
+            return max(dateTimes)
+
+
+class NoBackupException(Exception):
+    pass
