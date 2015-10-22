@@ -149,5 +149,67 @@ class Organizer:
             return max(dateTimes)
 
 
+    def moreThanOneFullBackupAvailable(self, backupEntry):
+        """
+        Returns true, if more than one full backup is available,
+        otherwise false.
+        """
+        fileExtension = backupEntry.getFilenameExtension()
+        name = backupEntry.getName()
+        regexFullString = name + '_' + self.dateTimeRegexString + '_'+ self.fullBackupFilenameExtension + fileExtension
+        files = os.listdir(self.configurations.getBackupDirectory())
+        count = 0
+        for f in files:
+            if re.match(regexFullString, f):
+                count += 1
+        if count > 1:
+            return True
+        return False
+
+
+    def getDatesOfPreviousFullBackups(self, backupEntry):
+        """
+        Returns a list of dates of the full backups before the last full backup.
+        """
+        fileExtension = backupEntry.getFilenameExtension()
+        name = backupEntry.getName()
+        regexFullString = name + '_' + self.dateTimeRegexString + '_' + self.fullBackupFilenameExtension + fileExtension
+        files = os.listdir(self.configurations.getBackupDirectory())
+        dateTimes = []
+        for f in files:
+            if re.match(regexFullString, f):
+                match = re.search(self.dateTimeRegexString, f)
+                b = match.span()[0]
+                e = match.span()[1]
+                datetimeString = f[b:e]
+                year = int(datetimeString[0:4])
+                month = int(datetimeString[5:7])
+                day = int(datetimeString[8:10])
+                hour = int(datetimeString[11:13])
+                minute = int(datetimeString[14:16])
+                second = int(datetimeString[17:19])
+                dt = datetime.datetime(year, month, day, hour=hour, minute=minute, second=second)
+                dateTimes.append(dt)
+
+        if not dateTimes:
+            return []
+
+        lastFullBackupDate = max(dateTimes)
+        dateTimes.remove(lastFullBackupDate)
+        return dateTimes
+
+
+    def getDatesOfPreviousIncrementalBackups(self, backupEntry):
+        """
+        Returns a list of dates of the incremental backups before the last full backup.
+        """
+        # incrementalDates = []
+        end = self.getTimeOfLastFullBackup(backupEntry)
+        start = datetime.datetime(2000, 1, 1)
+        incrementalDates = self.getIncrementalTimesBetweenDates(backupEntry, start, end)
+        return incrementalDates
+
+
+
 class NoBackupException(Exception):
     pass
