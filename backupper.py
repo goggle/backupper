@@ -1,0 +1,171 @@
+#!/usr/bin/env python
+
+import argparse
+import sys
+import datetime
+
+from utils import Organizer
+from backup import Backup
+from recover import Recover
+from remove import Remove
+
+def completeFullBackup():
+    organizer = Organizer()
+    backup = Backup(organizer)
+    backup.performFullBackup()
+
+def partialFullBackup(name):
+    organizer = Organizer()
+    backup = Backup(organizer)
+    entry = organizer.getBackupEntryByName(name)
+    if entry == None:
+        print('Backup entry ' + name + ' does not exist.')
+        sys.exit(1)
+    backup.performFullBackupOfEntry(entry)
+
+def completeIncrementalBackup():
+    organizer = Organizer()
+    backup = Backup(organizer)
+    backup.performIncrementalBackup()
+
+def partialIncrementalBackup(name):
+    organizer = Organizer()
+    backup = Backup(organizer)
+    entry = organizer.getBackupEntryByName(name)
+    if entry == None:
+        print('Backup entry ' + name + ' does not exist.')
+        sys.exit(1)
+    backup.performIncrementalBackupOfEntry(entry)
+
+def completeRecover():
+    organizer = Organizer()
+    recover = Recover(organizer)
+    recover.recoverBackupUpToDate()
+
+def partialRecover(name):
+    organizer = Organizer()
+    recover = Recover(organizer)
+    entry = organizer.getBackupEntryByName(name)
+    if entry == None:
+        print('Backup entry ' + name + ' does not exist.')
+        sys.exit(1)
+    recover.recoverBackupEntryUpToDate(entry)
+
+def completeRecoverToDate(date):
+    # TODO: Check invalid input:
+    year, month, day, time = date.split('-')
+    hour, minute, second = time.split(':')
+    year = int(year)
+    month = int(month)
+    day = int(day)
+    hour = int(hour)
+    minute = int(minute)
+    second = int(second)
+    dt = datetime.datetime(year, month, day, hour, minute, second)
+
+    organizer = Organizer()
+    recover = Recover(organizer)
+    recover.recoverBackupUpToDate(dt)
+
+def partialRecoverToDate(name, date):
+    # TODO: Check invalid input:
+    year, month, day, time = date.split('-')
+    hour, minute, second = time.split(':')
+    year = int(year)
+    month = int(month)
+    day = int(day)
+    hour = int(hour)
+    minute = int(minute)
+    second = int(second)
+    dt = datetime.datetime(year, month, day, hour, minute, second)
+
+    organizer = Organizer()
+    entry = organizer.getBackupEntryByName(name)
+    if entry == None:
+        print('Backup entry ' + name + ' does not exist.')
+        sys.exit(1)
+
+
+    recover = Recover(organizer)
+    recover.recoverBackupEntryUpToDate(entry, dt)
+
+
+def completeRemove():
+    organizer = Organizer()
+    remove = Remove(organizer)
+    remove.removePreviousBackupCycles()
+
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='A tool to create full and incremental backups of specified directories. It can also extract these\
+        backups to a specified recovery directory. Previous backup cycles can be removed.')
+
+    group = parser.add_mutually_exclusive_group(required=True)
+
+    group.add_argument('-f', '--full-backup', help='Performs a complete full backup of all the backup entries.', action='store_true')
+    group.add_argument('--partial-full-backup', help='Performs a full backup of given backup entry.', metavar='backup_entry')
+    group.add_argument('-i', '--incremental-backup', help='Performs a complete incremental backup of all the backup entries.', action='store_true')
+    group.add_argument('--partial-incremental-backup', help='Performs a incremental backup of a given backup entry.', metavar='backup_entry')
+    group.add_argument('-x', '--recover', '--extract', help='Recovers all the saved backup entries to the latest saved backup.', action='store_true')
+    group.add_argument('--partial-recover', help='Recovers a given backup entry to its latest saved backup.', metavar='backup_entry')
+    group.add_argument('--recover-to-date', help='Recovers all the backups up to a given date. The date argument must be given in the \
+        form year-month-day-hour:minute:second, e.g. 2015-10-20-22:10:00.', metavar='date')
+    group.add_argument('--partial-recover-to-date', help='Recovers a given backup entry up to a given date. The date argument must be given in the \
+        form year-month-day-hour:minute:second, e.g. 2015-10-20-22:10:00.', nargs=2, metavar=('backup_entry', 'date'))
+    group.add_argument('-r', '--remove', help='Removes the all the stored backups before the last full backup.', action='store_true')
+    # parser.add_argument('echo')
+
+    args = parser.parse_args()
+
+    # count = 0
+    # if args.full_backup:
+    #     count += 1
+    # if args.partial_full_backup:
+    #     count += 1
+    # if args.incremental_backup:
+    #     count += 1
+    # if args.partial_incremental_backup:
+    #     count += 1
+    # if args.recover:
+    #     count += 1
+    # if args.partial_recover:
+    #     count += 1
+    # if args.recover_to_date:
+    #     count += 1
+    # if args.partial_recover_to_date:
+    #     count += 1
+    # if args.remove:
+    #     count += 1
+    #
+    # if count == 0 or count > 1:
+    #     print('Use the program with exactly one specifed option. See backupper -h for help.')
+    #     sys.exit(0)
+
+    if args.full_backup:
+        completeFullBackup()
+    elif args.partial_full_backup:
+        name = args.partial_full_backup
+        partialFullBackup(name)
+    elif args.incremental_backup:
+        completeIncrementalBackup()
+    elif args.partial_incremental_backup:
+        name = args.partial_incremental_backup
+        partialIncrementalBackup(name)
+    elif args.recover:
+        completeRecover()
+    elif args.partial_recover:
+        name = args.partial_recover
+        partialRecover(name)
+    elif args.recover_to_date:
+        dateString = args.recover_to_date
+        completeRecoverToDate(dateString)
+    elif args.partial_recover_to_date:
+        name = args.partial_recover_to_date[0]
+        dateString = args.partial_recover_to_date[1]
+        partialRecoverToDate(name, dateString)
+
+    elif args.remove:
+        completeRemove()
+
+    # print(args.echo)

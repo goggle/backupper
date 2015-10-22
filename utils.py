@@ -210,6 +210,15 @@ class Organizer:
         return incrementalDates
 
 
+    def getBackupEntryByName(self, name):
+        backupEntries = self.configurations.getBackupEntries()
+        for entry in backupEntries:
+            if entry.getName() == name:
+                return entry
+        return None
+
+
+
 
 class NoBackupException(Exception):
     pass
