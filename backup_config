@@ -3,9 +3,9 @@ BackupDirectory = /home/alex/backup
 RecoveryDirectory = /home/alex/backup
 LogFile = /home/alex/backup/log_backup
 
-[Documents]
-Directory = /home/alex/Documents
-Compression = gz
+[Test]
+Directory = /home/alex/test
+Compression = xz
 
 [Startpage]
 Directory = /home/alex/startpage

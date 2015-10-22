@@ -16,7 +16,7 @@ class Organizer:
         self.logFile = self.configurations.getLogFile()
 
         # Initialize the logger:
-        logging.basicConfig(filename=self.logFile, level=logging.INFO, format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S')
+        logging.basicConfig(filename=self.logFile, level=logging.INFO, format='[%(levelname)s] %(asctime)s: %(message)s', datefmt='%d.%m.%Y %H:%M:%S')
 
     def getFullBackupFilenameExtension(self):
         return self.fullBackupFilenameExtension

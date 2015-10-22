@@ -34,6 +34,24 @@ class Recover:
             'xz': 'J'
         }
 
+        logging.info('Beginning recovery of ' + name + '.')
+
+        # Check, if the recovery already exists:
+        directoryName = directory.strip('/')
+        if directoryName.find('/') == -1:
+            directoryName = '/'
+        else:
+            while True:
+                ind = directoryName.find('/')
+                if ind == -1:
+                    break
+                directoryName = directoryName[ind + 1 :]
+        checkDir = os.path.join(self.recoveryDirectory, directoryName)
+        if os.path.exists(checkDir):
+            logging.warning('The directory ' + checkDir + ' already exists. You should move it first. Aborted recovery of ' + name + '.')
+            return
+
+
         try:
             fullBackupDate = self.organizer.getTimeOfLastFullBackupBeforeDate(backupEntry, date)
             fullBackupDateString = self.organizer.datetimeToString(fullBackupDate)
@@ -45,18 +63,11 @@ class Recover:
         fullBackupFullFilename = os.path.join(self.backupDirectory, fullBackupFilename)
 
         incrementalBackupDates = self.organizer.getIncrementalTimesBetweenDates(backupEntry, fullBackupDate, date)
-        # incrementalBackupDatesStrings = []
-        # for elem in incrementalBackupDates:
-        #     incrementalBackupDatesStrings.append(self.organizer.datetimeToString(elem))
         incrementalBackupFilenames = []
         for elem in incrementalBackupDates:
             datestring = self.organizer.datetimeToString(elem)
             filename = name + '_' + datestring + '_' + self.incrementalBackupFilenameExtension + fileExtension
             incrementalBackupFilenames.append(filename)
-
-        # print(fullBackupFilename)
-        # for elem in incrementalBackupFilenames:
-        #     print(elem)
 
         command = 'tar'
         commandOptionsFullBackup = '-x' + tarDict[compression] + 'pf ' + fullBackupFullFilename + ' -C ' + self.recoveryDirectory
@@ -94,3 +105,8 @@ class Recover:
         except Exception as exception:
             logging.error('An unknown exception occured: ' + str(exception))
             os.chdir(currentDir)
+
+        logging.info('Successfully recovered ' + name + ' up to ' + str(date) + '.')
+
+class RecoveryExists(Exception):
+    pass
