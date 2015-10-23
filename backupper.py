@@ -4,10 +4,10 @@ import argparse
 import sys
 import datetime
 
-from utils import Organizer
-from backup import Backup
-from recover import Recover
-from remove import Remove
+from backupper.utils import Organizer
+from backupper.backup import Backup
+from backupper.recover import Recover
+from backupper.remove import Remove
 
 def completeFullBackup():
     organizer = Organizer()
