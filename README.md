@@ -112,3 +112,5 @@ Backupper uses a log file specified in the configurations, to log all its activi
 ## General Recommodations
 * Before using backupper, test if it works fine for you. Create a full backup of some stuff, edit/add/remove some files, create some incremental backups and recover the backups. Try also to recover to a certain date.
 * Store your backups on another physical disk than your data. Otherwise, the backup is useless!
+* Make sure that the user who runs backupper has the appropriate permissions for all the directories, which backupper accesses. So if for example you want to backup the whole /etc directory, backupper might need to run as root. Errors including permission problems are not caught yet!
+
