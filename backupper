@@ -4,10 +4,13 @@ import argparse
 import sys
 import datetime
 
-from backupper.utils import Organizer
-from backupper.backup import Backup
-from backupper.recover import Recover
-from backupper.remove import Remove
+from Backupper.utils import Organizer
+from Backupper.backup import Backup
+from Backupper.recover import Recover
+from Backupper.remove import Remove
+
+from Backupper.config import *
+
 
 def completeFullBackup():
     organizer = Organizer()
@@ -142,30 +145,54 @@ if __name__ == '__main__':
     #     print('Use the program with exactly one specifed option. See backupper -h for help.')
     #     sys.exit(0)
 
-    if args.full_backup:
-        completeFullBackup()
-    elif args.partial_full_backup:
-        name = args.partial_full_backup
-        partialFullBackup(name)
-    elif args.incremental_backup:
-        completeIncrementalBackup()
-    elif args.partial_incremental_backup:
-        name = args.partial_incremental_backup
-        partialIncrementalBackup(name)
-    elif args.recover:
-        completeRecover()
-    elif args.partial_recover:
-        name = args.partial_recover
-        partialRecover(name)
-    elif args.recover_to_date:
-        dateString = args.recover_to_date
-        completeRecoverToDate(dateString)
-    elif args.partial_recover_to_date:
-        name = args.partial_recover_to_date[0]
-        dateString = args.partial_recover_to_date[1]
-        partialRecoverToDate(name, dateString)
+    try:
+        if args.full_backup:
+            completeFullBackup()
+        elif args.partial_full_backup:
+            name = args.partial_full_backup
+            partialFullBackup(name)
+        elif args.incremental_backup:
+            completeIncrementalBackup()
+        elif args.partial_incremental_backup:
+            name = args.partial_incremental_backup
+            partialIncrementalBackup(name)
+        elif args.recover:
+            completeRecover()
+        elif args.partial_recover:
+            name = args.partial_recover
+            partialRecover(name)
+        elif args.recover_to_date:
+            dateString = args.recover_to_date
+            completeRecoverToDate(dateString)
+        elif args.partial_recover_to_date:
+            name = args.partial_recover_to_date[0]
+            dateString = args.partial_recover_to_date[1]
+            partialRecoverToDate(name, dateString)
 
-    elif args.remove:
-        completeRemove()
+        elif args.remove:
+            completeRemove()
+    except NoDefaultSectionException:
+        print('The configuration file must contain a Default section!')
+        sys.exit(1)
+    except NoBackupDirectoryException:
+        print('No valid backup directory specified!')
+        sys.exit(1)
+    except NoRecoveryDirectoryException:
+        print('No valid recovery directory specified!')
+        sys.exit(1)
+    except NoLogFileException:
+        print('No log file specified!')
+        sys.exit(1)
+    except NoEntrySectionException:
+        print('No backup entries specified in the configuration file. Nothing to do.')
+        sys.exit(0)
+    except InvalidSectionException:
+        print('Could not a parse a section backup entry section in the configuration file. Check the configuration file.')
+    except InvalidDirectoryException:
+        print('One of the specified directories in a backup entry section is invalid.')
+        sys.exit(1)
+    except InvalidCompressionException:
+        print('One of the specified compression options in a backup entry section is invalid.')
+        sys.exit(1)
 
     # print(args.echo)

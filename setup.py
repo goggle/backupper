@@ -8,5 +8,5 @@ setup(name='backupper',
     author='Alex Seiler',
     author_email='seileralex@gmail.com',
     url='www.google.ch',
-    packages=['backupper'],
-    scripts=['backupper.py'])
+    packages=['Backupper'],
+    scripts=['backupper'])

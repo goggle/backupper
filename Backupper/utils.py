@@ -1,4 +1,4 @@
-from backupper import config
+from Backupper import config
 import logging
 import datetime
 import re

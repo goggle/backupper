@@ -6,8 +6,7 @@ HOME_DIRECTORY = os.path.expanduser('~')
 
 # Specify the possible paths to the config files. The first items in the list
 # have higher priorities:
-CONFIG_FILES = ['/etc/backup_config', os.path.join(HOME_DIRECTORY, '.config/backup_config'),
-    os.path.join(HOME_DIRECTORY, 'development/backup/backup_config')]
+CONFIG_FILES = [os.path.join(HOME_DIRECTORY, '.config/backupper.conf'), '/etc/backupper.conf']
 
 
 class Config:
