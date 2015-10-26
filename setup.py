@@ -3,10 +3,10 @@
 from distutils.core import setup
 
 setup(name='backupper',
-    version='0.1',
+    version='0.1.1',
     description='A utility to automatically create full and incremental backups.',
     author='Alex Seiler',
     author_email='seileralex@gmail.com',
-    url='www.google.ch',
+    url='https://github.com/goggle/backupper',
     packages=['Backupper'],
     scripts=['backupper'])
