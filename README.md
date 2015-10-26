@@ -1,6 +1,6 @@
 # Backupper
 
-Backupper is a backup program written in python 3. It's for people who want to have an easy way to have regular backups of certain directories, rather than the whole system. It supports full backups and incremental backups. Backupper has only been tested on Linux.
+Backupper is a backup program written in Python 3. It's for people who want to have an easy way to have regular backups of certain directories, rather than the whole system. It supports full backups and incremental backups. Backupper has only been tested on Linux.
 
 ## Installation
 
@@ -86,6 +86,16 @@ where "backup_entry" is a specified entry in the configuration file and "date" i
 backupper --partial-recover-to-date Documents 2015-10-26-22:30:00
 ```
 
+
+If you have several full backups stored and want to remove all the backups before the newest stored full backup, run 
+```
+backupper -r
+```
+or 
+```
+backupper --remove
+```
+
 ### Systemd timers
 Backupper provides a systemd timer to have a daily incremental backup. To use this, copy the provided systemd timer (timers/backupper-daily.timer) and systemd service file (timer/backupper-daily.service) to systemd service file path on your system (usually /etc/systemd/system/) and run 
 ```
@@ -94,3 +104,8 @@ systemctl enable backupper-daily.timer
 
 ### Logging
 Backupper uses a log file specified in the configurations, to log all its activities. It's recommended to regularly check this log file for warnings and error, to make sure that everything works fine.
+
+
+## General Recommodations
+* Before using backupper, test if it works fine for you. Create a full backup of some stuff, edit/add/remove some files, create some incremental backups and recover the backups. Try also to recover to a certain date.
+* Store your backups on another physical disk than your data. Otherwise, the backup is useless!
