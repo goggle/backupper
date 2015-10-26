@@ -11,6 +11,9 @@ python setup.py --optimize=1
 
 Backupper depends on python 3 and GNU tar (https://www.gnu.org/software/tar/), so make sure that you have these programs installed. Optional dependencies are gzip, bzip2 and xz, if you want to use compression, and systemd, if you want to use the provided systemd timer.
 
+Arch Linux users can install backupper from the AUR: https://aur.archlinux.org/packages/backupper/
+It also installs the systemd timer files, so you just need to activate "backupper-daily.timer", if you want to use it.
+
 
 ## Configuration
 
