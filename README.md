@@ -9,7 +9,7 @@ Backupper comes with a distutils setup script. Just run
 python setup.py --optimize=1
 ```
 
-Backupper depends on python 3 and Gnu tar (https://www.gnu.org/software/tar/), so make sure that you have these programs installed. Optional dependencies are gzip, bzip2 and xz, if you want to use compression.
+Backupper depends on python 3 and GNU tar (https://www.gnu.org/software/tar/), so make sure that you have these programs installed. Optional dependencies are gzip, bzip2 and xz, if you want to use compression, and systemd, if you want to use the provided systemd timer.
 
 
 ## Configuration
@@ -45,3 +45,52 @@ Each config file needs to have a [Default] section, where the global configurati
 For each directory that should be backed up, create a new [BackupName] entry. Set the "Directory" variable to the path of the directory to back up and choose a compression type stored in the "Compression" variable. Valid compression types are "tar" for no compression (it creates only a .tar file), "gz" or "gzip" for gzip compression (it creates a .tar.gz file), "bz2" or "bzip2" for bzip2 compression (it creates a .tar.bz2 file) and "xz" for xz compression (it creates a .tar.xz file).
 
 ## Usage
+
+After having configured backupper, it is ready to use. Before being able to make incremental backups, we need to have a full backup of our directories. To let backupper perform a full backup, run 
+```
+backupper -f
+```
+or 
+```
+backupper --full-backup
+```
+Backupper will store the backups in the specified backup directory from the configuration file. It also stores a snapshot file there, where the file changes will be tracked.
+
+
+From now on, we can let backupper create incremental backups, so only the changes from the previous available backup will be stored. To do this, run
+```
+backupper -i
+```
+or
+```
+backupper --incremental-backup
+```
+If you want to have automatically incremental backups, you can either run "backupper --incremental-backup" from a cronjob or use the provided systemd timer. See also the next section.
+
+
+If you need to recover a backup, run
+```
+backupper -x
+```
+or 
+```
+backupper --recover
+```
+It will recover the newest saved backups into the specified recovery directory from the configuration file.
+If you want to recover a backup only up to a certain date, you can run
+```
+backupper --partial-recover-to-date backup_entry date
+```
+where "backup_entry" is a specified entry in the configuration file and "date" is in the form year-month-day-hour:minute:second. For example, if we want to recover our "Documents" from the configuration file above up to Monday, October 26, 2015, 22:30, we would run
+```
+backupper --partial-recover-to-date Documents 2015-10-26-22:30:00
+```
+
+### Systemd timers
+Backupper provides a systemd timer to have a daily incremental backup. To use this, copy the provided systemd timer (timers/backupper-daily.timer) and systemd service file (timer/backupper-daily.service) to systemd service file path on your system (usually /etc/systemd/system/) and run 
+```
+systemctl enable backupper-daily.timer
+```
+
+### Logging
+Backupper uses a log file specified in the configurations, to log all its activities. It's recommended to regularly check this log file for warnings and error, to make sure that everything works fine.
